@@ -73,7 +73,7 @@ npm run serve
 
 ### Config
 
-```JSON
+```JavaScript
 {
   "shell": "cmd.exe",  // Shell
   "port": 3000,  // Listening port for development server
