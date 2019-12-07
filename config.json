@@ -1,0 +1,12 @@
+{
+  "shell": "cmd.exe",
+  "port": 3000,
+  "auth": {
+    "timeout": 5000,
+    "username": "websshd",
+    "password": "ohMywebsshd"
+  },
+  "cors": [
+    "*:*"
+  ]
+}

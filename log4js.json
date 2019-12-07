@@ -1,0 +1,31 @@
+{
+  "appenders": {
+    "console": {
+      "type": "console"
+    },
+    "app": {
+      "type": "dateFile",
+      "filename": "logs/app/app.log",
+      "alwaysIncludePattern": true,
+      "keepFileExt": true
+    },
+    "pty": {
+      "type": "dateFile",
+      "filename": "logs/pty/pty.log",
+      "alwaysIncludePattern": true,
+      "keepFileExt": true
+    },
+    "auth": {
+      "type": "dateFile",
+      "filename": "logs/auth/auth.log",
+      "alwaysIncludePattern": true,
+      "keepFileExt": true
+    }
+  },
+  "categories": {
+    "default": { "appenders": [ "console" ], "level": "debug" },
+    "app": { "appenders": [ "console", "app" ], "level": "debug" },
+    "pty": { "appenders": [ "console", "pty" ], "level": "debug" },
+    "auth": { "appenders": [ "console", "auth" ], "level": "debug" }
+  }
+}
