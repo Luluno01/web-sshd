@@ -76,6 +76,7 @@ npm run serve
 ```JavaScript
 {
   "shell": "cmd.exe",  // Shell
+  "conty": false,  // Use CONTY or not (for Windows only)
   "port": 3000,  // Listening port for development server
   "auth": {
     "timeout": 5000,  // Authentication timeout (to disable timeout, set this to `false`)

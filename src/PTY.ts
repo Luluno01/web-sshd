@@ -22,7 +22,7 @@ export class PTY {
     this.options = options
   }
 
-  start() {
+  start(conty: boolean = false) {
     if(this.proc) {
       logger.error(`PTY already or started or has not been destroyed (pid: ${this.proc.pid})`)
       throw new Error('Already started')
@@ -32,7 +32,7 @@ export class PTY {
       ...this.options,
       cwd: this.home,
       env: process.env,
-      useConpty: true
+      useConpty: conty
     })
     const { pid } = proc
     if(!pid) {
@@ -48,12 +48,14 @@ export class PTY {
     try {
       const { proc } = this
       if(proc) {
-        logger.info(`Destroying PTY (pid ${proc.pid})`)
+        const { pid } = proc
+        logger.info(`Destroying PTY (pid ${pid})`)
         if(os.platform() == 'win32') {
           proc.kill()
         } else {
           proc.kill('SIGKILL')
         }
+        logger.info(`PTY (pid ${pid}) destroyed`)
       }
     } catch(err) {}
     this.proc = null

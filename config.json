@@ -1,5 +1,6 @@
 {
   "shell": "cmd.exe",
+  "conty": false,
   "port": 3000,
   "auth": {
     "timeout": 5000,

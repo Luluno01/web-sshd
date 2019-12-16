@@ -9,7 +9,7 @@ const config = require('../config.json')
 log4js.configure('./log4js.json')
 const logger = log4js.getLogger('app')
 const auth = new SimpleAuth(config.auth)
-const sshd = new WebSSHD({ shell: config.shell, authenticator: auth.authenticator })
+const sshd = new WebSSHD({ shell: config.shell, conty: config.conty, authenticator: auth.authenticator })
 const server = http.createServer((_, res) => {
   res.statusCode = 200
   res.end(`<!DOCTYPE html>

@@ -45,9 +45,11 @@ export enum ServerEvent {
 
 export class WebSSHD {
   public shell?: string
+  public conty?: boolean
   protected authenticator?: EventEmitter
-  constructor({ shell, authenticator }: { shell?: string, authenticator?: EventEmitter }) {
+  constructor({ shell, conty, authenticator }: { shell?: string, conty?: boolean, authenticator?: EventEmitter }) {
     this.shell = shell
+    this.conty = conty
     this.authenticator = authenticator
   }
 
@@ -69,24 +71,36 @@ export class WebSSHD {
   }
 
   protected attachPTY(socket: Socket, next?: () => void) {
+    if(next) next()
     logger.info(`${socket.handshake.address} - "${socket.id}" attaching PTY`)
     const pty = new PTY
     if(this.shell) pty.shell = this.shell
     try {
-      pty.start()
+      pty.start(this.conty)
     } catch(err) {
-      logger.error(`${socket.handshake.address} - "${socket.id}" failed to start PTY`)
+      logger.error(`${socket.handshake.address} - "${socket.id}" failed to start PTY`, err)
       socket.emit(ServerEvent.FAILED)
       socket.disconnect()
       pty.destroy()  // For safety
-      if(next) next()
       return
     }
     const { proc, options } = pty
     socket.emit(ServerEvent.SIZE, options)
     socket
-      .on(ClientEvent.MESSAGE, data => proc.write(data))
-      .on(ClientEvent.RESIZE, ({ cols, rows }: PTYOptions) => proc.resize(cols, rows))
+      .on(ClientEvent.MESSAGE, data => {
+        try {
+          proc.write(data)
+        } catch(err) {
+          logger.error(`${socket.handshake.address} - "${socket.id}" failed to write to PTY`, err)
+        }
+      })
+      .on(ClientEvent.RESIZE, ({ cols, rows }: PTYOptions) => {
+        try {
+          proc.resize(cols, rows)
+        } catch(err) {
+          logger.error(`${socket.handshake.address} - "${socket.id}" failed to resize PTY`, err)
+        }
+      })
       .on(ClientEvent.EXIT, () => {
         logger.info(`${socket.handshake.address} - "${socket.id}" client force exit`)
         pty.destroy()
@@ -106,7 +120,6 @@ export class WebSSHD {
       socket.disconnect()
       pty.destroy()
     })
-    if(next) next()
   }
 }
 

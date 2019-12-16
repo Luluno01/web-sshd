@@ -18,9 +18,9 @@
   "license": "ISC",
   "devDependencies": {
     "@types/log4js": "^2.3.5",
-    "@types/node": "^12.12.6",
+    "@types/node": "^12.12.17",
     "@types/socket.io": "^2.1.4",
-    "nodemon": "^2.0.1",
+    "nodemon": "^2.0.2",
     "ts-node": "^8.4.1",
     "typescript": "^3.7.2"
   },
