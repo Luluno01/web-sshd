@@ -11,6 +11,8 @@
 
 WebSocket-based SSH server.
 
+This server is meant to be used with [WebSSHD Credential Storage](https://github.com/Luluno01/web-sshd-credential-storage) and [Cloush](https://github.com/Luluno01/cloush) (you may also use it for your own project if you like).
+
 ## Usage
 
 ### Install
