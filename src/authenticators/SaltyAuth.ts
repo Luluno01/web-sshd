@@ -98,6 +98,7 @@ export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
           //   this.emit(socket.id, true)
           //   socket.emit(ServerEvent.AUTHENTICATED)
           // } else {
+          //   logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (incorrect username or password)`)
           //   disconnectOnAuthFailed()
           // }
         } else {
