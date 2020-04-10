@@ -1,7 +1,8 @@
-import PTY, { PTYOptions } from './PTY'
+import PTY, { PTYOptions } from '../PTY'
 import { Socket } from 'socket.io'
 import * as log4js from 'log4js'
 import { EventEmitter } from 'events'
+import Middleware from '../Middleware'
 const logger = log4js.getLogger('app')
 
 
@@ -26,10 +27,6 @@ export enum ServerEvent {
    */
   MESSAGE = 'message',
   /**
-   * PTY ready
-   */
-  READY = 'ready',
-  /**
    * Initial PTY buffer size
    */
   SIZE = 'size',
@@ -43,7 +40,7 @@ export enum ServerEvent {
   FAILED = 'failed'
 }
 
-export class WebSSHD {
+export class WebSSHD implements Middleware {
   public shell?: string
   public conty?: boolean
   protected authenticator?: EventEmitter
@@ -59,19 +56,19 @@ export class WebSSHD {
 
   public onNewConnection(socket: Socket, next: () => void) {
     const { authenticator } = this
-    if(authenticator) {
+    if (authenticator) {
       authenticator.once(socket.id, (authenticated: boolean) => {
-        if(!authenticated) return
+        if (!authenticated) return
         this.attachPTY(socket)
       })
-      next()
     } else {
-      this.attachPTY(socket, next)
+      logger.warn('No authenticator configured!')
+      this.attachPTY(socket)
     }
+    next()
   }
 
-  protected attachPTY(socket: Socket, next?: () => void) {
-    if(next) next()
+  protected attachPTY(socket: Socket) {
     logger.info(`${socket.handshake.address} - "${socket.id}" attaching PTY`)
     const pty = new PTY
     if(this.shell) pty.shell = this.shell

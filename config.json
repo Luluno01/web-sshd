@@ -1,13 +1,48 @@
 {
-  "shell": "cmd.exe",
-  "conty": false,
-  "port": 3000,
-  "auth": {
-    "timeout": 5000,
-    "username": "websshd",
-    "password": "ohMywebsshd"
-  },
+  "port": 3001,
   "cors": [
     "*:*"
+  ],
+  "auth": {
+    "default": {
+      "type": "simple-auth",
+      "timeout": 5000,
+      "username": "websshd",
+      "password": "ohMywebsshd"
+    }
+  },
+  "targets": [
+    {
+      "type": "local",
+      "nsp": "/cloush",
+      "auth": "default",
+      "shell": "cmd.exe",
+      "conty": false
+    },
+    {
+      "type": "local",
+      "nsp": "/local",
+      "auth": "default",
+      "shell": "powershell.exe",
+      "conty": false
+    },
+    {
+      "nsp": "/remote1",
+      "type": "remote",
+      "auth": "default",
+      "host": "127.0.0.1",
+      "port": "22",
+      "username": "cloush",
+      "password": "ohMywebsshd"
+    },
+    {
+      "nsp": "/remote2",
+      "type": "remote",
+      "auth": "default",
+      "host": "127.0.0.1",
+      "port": "22",
+      "username": "cloush",
+      "privateKey": "id_rsa"
+    }
   ]
 }
