@@ -2,6 +2,7 @@ import * as assert from 'assert'
 import { Socket } from 'socket.io'
 import * as log4js from 'log4js'
 import Authenticator from './Authenticator'
+import { randStr } from '../helpers/random'
 const logger = log4js.getLogger('auth')
 
 
@@ -37,6 +38,7 @@ export interface SaltyAuthOptions {
 }
 
 export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
+  public fakeSalt = randStr(16)
   public checkOptions({ timeout, username, password, salt }: SaltyAuthOptions) {
     const timeoutErrorMsg = `Expecting \`timeout\` to be either undefined or a non-negative number, got ${timeout}`
     switch (typeof timeout) {
@@ -77,13 +79,17 @@ export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
       .once(ClientEvent.USERNAME, _username => {
         // Send salts until we know the username for future support for
         // multi-user
-        if (typeof _username == 'string') {
-          username = _username
-          // TODO: Send static and dynamic salt
-          // socket.emit(ServerEvent.SALTS, )
+        if (_username == this.options.username) {
+          if (typeof _username == 'string') {
+            username = _username
+            // TODO: Send static and dynamic salt
+            // socket.emit(ServerEvent.SALTS, [ this.options.salt, dynamicSalt ])
+          } else {
+            logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (invalid username)`)
+            disconnectOnAuthFailed()
+          }
         } else {
-          logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (invalid username)`)
-          disconnectOnAuthFailed()
+          // socket.emit(ServerEvent.SALTS, [ this.fakeSalt, dynamicSalt ])
         }
       })
       .once(ClientEvent.PASSWORD, password => {
@@ -93,7 +99,7 @@ export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
         }
         if (typeof password == 'string' && password.match(/^[0-9a-fA-F]{128}$/)) {
           // TODO: Match username and verify password by checking sha512(dynamicSalt + staticSaltedPassword)
-          // if (_username == this.options.username && ) {
+          // if (username == this.options.username && /* Calculate and match hash(hash(staticSalt + password) + dynamicSalt) */) {
           //   logger.info(`${socket.handshake.address} - "${socket.id}" authenticated`)
           //   this.emit(socket.id, true)
           //   socket.emit(ServerEvent.AUTHENTICATED)
