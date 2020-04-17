@@ -3,6 +3,7 @@ import { Socket } from 'socket.io'
 import * as log4js from 'log4js'
 import Authenticator from './Authenticator'
 import { randStr } from '../helpers/random'
+import { hash } from '../helpers/hash'
 const logger = log4js.getLogger('auth')
 
 
@@ -74,7 +75,7 @@ export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
       socket.disconnect()
     }
     let username: string | undefined
-    // let dynamicSalt = 
+    let dynamicSalt = randStr(16)
     socket
       .once(ClientEvent.USERNAME, _username => {
         // Send salts until we know the username for future support for
@@ -83,13 +84,13 @@ export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
           if (typeof _username == 'string') {
             username = _username
             // TODO: Send static and dynamic salt
-            // socket.emit(ServerEvent.SALTS, [ this.options.salt, dynamicSalt ])
+            socket.emit(ServerEvent.SALTS, [ this.options.salt, dynamicSalt ])
           } else {
             logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (invalid username)`)
             disconnectOnAuthFailed()
           }
         } else {
-          // socket.emit(ServerEvent.SALTS, [ this.fakeSalt, dynamicSalt ])
+          socket.emit(ServerEvent.SALTS, [ this.fakeSalt, dynamicSalt ])
         }
       })
       .once(ClientEvent.PASSWORD, password => {
@@ -99,14 +100,14 @@ export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
         }
         if (typeof password == 'string' && password.match(/^[0-9a-fA-F]{128}$/)) {
           // TODO: Match username and verify password by checking sha512(dynamicSalt + staticSaltedPassword)
-          // if (username == this.options.username && /* Calculate and match hash(hash(staticSalt + password) + dynamicSalt) */) {
-          //   logger.info(`${socket.handshake.address} - "${socket.id}" authenticated`)
-          //   this.emit(socket.id, true)
-          //   socket.emit(ServerEvent.AUTHENTICATED)
-          // } else {
-          //   logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (incorrect username or password)`)
-          //   disconnectOnAuthFailed()
-          // }
+          if (username == this.options.username && password == hash( dynamicSalt + this.options.password )) {
+            logger.info(`${socket.handshake.address} - "${socket.id}" authenticated`)
+            this.emit(socket.id, true)
+            socket.emit(ServerEvent.AUTHENTICATED)
+          } else {
+            logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (incorrect username or password)`)
+            disconnectOnAuthFailed()
+          }
         } else {
           logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (invalid password)`)
           disconnectOnAuthFailed()
