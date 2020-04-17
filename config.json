@@ -5,10 +5,11 @@
   ],
   "auth": {
     "default": {
-      "type": "simple-auth",
+      "type": "salty-auth",
       "timeout": 5000,
       "username": "websshd",
-      "password": "ohMywebsshd"
+      "password": "b8240ca4f47411d6cbbd2e5d364b92713656200cad8ba2f4fb6243b9ca08e1100932cef95d4596cb62aca51aa99b1aed19064910b6dae960207f4593cb9450db",
+      "salt": "7S=Q`-~TM,iUD.>]"
     }
   },
   "targets": [

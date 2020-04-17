@@ -31,6 +31,11 @@ const server = http.createServer((_, res) => {
 const io = socketIO(server)
 io.origins(config.cors)
 checkTargetConfig(config)
+for (const [ name, { type } ] of Object.entries(config.auth)) {
+  if (type == AuthenticatorNames.SIMPLE_AUTH) {
+    logger.warn(`Authentication configuration "${name}" is using SimpleAuth, which is insecure and deprecated`)
+  }
+}
 for (const target of config.targets) {
   const authOptions = config.auth[target.auth]
   const AuthenticatorClass = authenticators.get(authOptions.type as AuthenticatorNames)

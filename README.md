@@ -63,7 +63,7 @@ const authenticator = new EventEmitter
 io.use(new WebSSHD({ shell: 'bash', authenticator }))
 ```
 
-For example, see [`SimpleAuth` middleware](./src/SimpleAuth.ts) and [`server`](./src/server.ts).
+For example, see [`SimpleAuth` middleware](./src/SimpleAuth.ts) (for example purpose only, deprecated) and [`server`](./src/server.ts).
 
 ### Run Development Server
 
@@ -77,14 +77,50 @@ npm run serve
 
 ```JavaScript
 {
-  "shell": "cmd.exe",  // Shell
-  "conty": false,  // Use CONTY or not (for Windows only)
   "port": 3000,  // Listening port for development server
   "auth": {
-    "timeout": 5000,  // Authentication timeout (to disable timeout, set this to `false`)
-    "username": "websshd",  // User name
-    "password": "ohMywebsshd"  // Password
+    "myAuth1": {  // An authentication configuration
+      "type": "salty-auth",
+      "timeout": 5000,  // Authentication timeout (to disable timeout, remove this or set to `undefined`)
+      "username": "websshd",  // User name
+      "password": "b8240ca4f47411d6cbbd2e5d364b92713656200cad8ba2f4fb6243b9ca08e1100932cef95d4596cb62aca51aa99b1aed19064910b6dae960207f4593cb9450db"  // Password
+      "salt": "7S=Q`-~TM,iUD.>]"  // Salt for password
+    },
+    "myAuth2": {  // Another authentication configuration
+      "type": "salty-auth",
+      "timeout": 5000,  // Authentication timeout (to disable timeout, remove this or set to `undefined`)
+      "username": "websshd",  // User name
+      "password": "44fcb1f2049c2b80400890922d891c356f73e9bf01c43063e86c4a8f037273796b0f50fe9b16b1776fb24e5eddfd59d08a81cfae7b5e64b035d8823ffab8829e"  // Password
+      "salt": "rt.-|(=6)W}64y,{"  // Salt for password
+    }
   },
+  "targets": [
+    {
+      "type": "local",  // Local target
+      "nsp": "/local",  // Socket.IO namespace (or the "path" part of the URL)
+      "auth": "myAuth1",  // Use "myAuth1"
+      "shell": "cmd.exe",  // Shell
+      "conty": false  // Use CONTY or not (for Windows only)
+    },
+    {
+      "nsp": "/remote1",
+      "type": "remote",  // Remote target
+      "auth": "myAuth2",
+      "host": "192.168.0.1",  // Remote SSH host
+      "port": "22",  // Remote SSH port
+      "username": "cloush",  // Remote SSH user
+      "password": "ohMywebsshd"  // Password for remote SSH
+    },
+    {
+      "nsp": "/remote2",
+      "type": "remote",
+      "auth": "myAuth2",
+      "host": "192.168.0.1",
+      "port": "22",
+      "username": "cloush",
+      "privateKey": "~/.ssh/id_rsa"  // Private key for remote SSH
+    }
+  ],
   "cors": [  // Allowed origins
     "*:*"
   ]
@@ -103,7 +139,8 @@ Client:
 
 ```TypeScript
 const socket = io('/')
-socket.emit('auth', { username: 'websshd', password: 'ohMywebsshd' })
+socket.on('salts', ([ staticSalt, dynamicSalt ]) => socket.emit('password', sha512(dynamicSalt + sha512(staticSalt + 'ohMywebsshd'))))
+socket.emit('username', 'websshd')
 socket.on('message', console.log)
 socket.on('exit', console.warn)
 socket.on('authenticated', () => {
