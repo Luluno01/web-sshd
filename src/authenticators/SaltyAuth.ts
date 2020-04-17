@@ -29,7 +29,7 @@ export interface SaltyAuthOptions {
    */
   username: string
   /**
-   * sha512(dynamicSalt, sha512(staticSalt + password))
+   * sha512(staticSalt + password)
    */
   password: string
   /**
@@ -61,6 +61,19 @@ export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
     assert(salt.length >= 8, saltErrorMsg)
   }
 
+  /**
+   * Handle authentication on new connection
+   * 
+   * ```
+   * User                                       Server
+   *   |------------------username---------------->|
+   *   |<------------[ sSalt, dSalt ]--------------|
+   *   |---hash(dSalt + hash(sSalt + password))--->|
+   *   |<------------------result------------------|
+   * ```
+   * @param socket Incoming socket
+   * @param next Callback for next middleware
+   */
   public onNewConnection(socket: Socket, next: () => void) {
     let t: ReturnType<typeof setTimeout> | null = null
     if (this.options.timeout) t = setTimeout(() => {
@@ -71,38 +84,76 @@ export class SaltyAuth extends Authenticator<SaltyAuthOptions> {
     }, this.options.timeout)
     const disconnectOnAuthFailed = () => {
       this.emit(socket.id, false)
+      /**
+       * Username or password incorrect, notify the user
+       * User                                       Server
+       *   |                   ...                     |
+       *   |<------------result (failed)---------------|
+       */
       socket.emit(ServerEvent.USERNAME_OR_PASSWORD_INCORRECT)
       socket.disconnect()
     }
     let username: string | undefined
+    /**
+     * Dynamic salt for this connection
+     */
     let dynamicSalt = randStr(16)
     socket
+      /**
+       * On user sends username
+       * User                                       Server
+       *   |------------------username---------------->|
+       */
       .once(ClientEvent.USERNAME, _username => {
         // Send salts until we know the username for future support for
         // multi-user
-        if (_username == this.options.username) {
+        if (_username === this.options.username) {
           if (typeof _username == 'string') {
             username = _username
-            // TODO: Send static and dynamic salt
+            /**
+             * Send back static and dynamic salt
+             * User                                       Server
+             *   |                   ...                     |
+             *   |<------------[ sSalt, dSalt ]--------------|
+             */
             socket.emit(ServerEvent.SALTS, [ this.options.salt, dynamicSalt ])
           } else {
             logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (invalid username)`)
             disconnectOnAuthFailed()
           }
         } else {
+          /**
+           * Username does not match, however, send back fake static and
+           * dynamic salt
+           * User                                       Server
+           *   |                   ...                     |
+           *   |<------------[ fSalt, dSalt ]--------------|
+           */
           socket.emit(ServerEvent.SALTS, [ this.fakeSalt, dynamicSalt ])
         }
       })
+      /**
+       * On user sends the hash value of dynamic-salted hash value of
+       * static-salted password
+       * User                                       Server
+       *   |                   ...                     |
+       *   |---hash(dSalt + hash(sSalt + password))--->|
+       */
       .once(ClientEvent.PASSWORD, password => {
         if (t) {
           clearTimeout(t)
           t = null
         }
         if (typeof password == 'string' && password.match(/^[0-9a-fA-F]{128}$/)) {
-          // TODO: Match username and verify password by checking sha512(dynamicSalt + staticSaltedPassword)
-          if (username == this.options.username && password == hash( dynamicSalt + this.options.password )) {
+          if (username === this.options.username && password === hash(dynamicSalt + this.options.password)) {
             logger.info(`${socket.handshake.address} - "${socket.id}" authenticated`)
             this.emit(socket.id, true)
+            /**
+             * Username and password matched, send feedback
+             * User                                       Server
+             *   |                   ...                     |
+             *   |<--------result (authenticated)------------|
+             */
             socket.emit(ServerEvent.AUTHENTICATED)
           } else {
             logger.warn(`${socket.handshake.address} - "${socket.id}" authenticate failed (incorrect username or password)`)
