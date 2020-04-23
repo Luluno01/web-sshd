@@ -19,6 +19,17 @@ This server is meant to be used with [WebSSHD Credential Storage](https://github
 * Local shell (local pseudo terminal)
 * Remote shell (connect to remote legacy SSH server and convert to WebSocket-based SSH protocol)
 
+## Known Issues
+
+Currently, I have encountered two major issues on Windows 10:
+
+* Enabling `conty` for local shell results in infinite blocking when forking PTY at a certain probability (seems to be fixed since `conty` is no longer marked as experimental in latest `node-pty`).
+* `Windows 10 Pro 1909`, which is my Windows version, forked pseudo terminals always crash (exit with code `1` and undefined signal) when resizing the window (to be exact, shrinking the window size). This is probably an issue of Windows itself, or caused by some breaking changes of pseudo terminal APIs provided by Windows 10.
+
+And one general issue:
+
+* Forking PTY is a blocking operation (`node-pty`), which **WILL** block the processing of other connections/requests or any other operations sharing the same `Node.js` main thread. If you have anti-virus software installed, forking of PTY might be further interfered or even interrupted.
+
 ## Usage
 
 ### Install
