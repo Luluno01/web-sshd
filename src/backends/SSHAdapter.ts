@@ -259,6 +259,10 @@ export class SSHAdapter implements Middleware {
             socket.emit(ServerEvent.FAILED, `Remote SSH error: ${err.message}${err.description ? ('; ' + err.description) : ''}`)
             break
           }
+          case 'client-authentication': {
+            socket.emit(ServerEvent.FAILED, `Remote authentication error: ${err.message}`)
+            break
+          }
           default:
             socket.emit(ServerEvent.FAILED, `Unknown error: ${err.message}`)
         }
