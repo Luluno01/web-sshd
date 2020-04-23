@@ -13,6 +13,12 @@ WebSocket-based SSH server.
 
 This server is meant to be used with [WebSSHD Credential Storage](https://github.com/Luluno01/web-sshd-credential-storage) and [Cloush](https://github.com/Luluno01/cloush) (you may also use it for your own project if you like).
 
+## Features
+
+* Multi-target support
+* Local shell (local pseudo terminal)
+* Remote shell (connect to remote legacy SSH server and convert to WebSocket-based SSH protocol)
+
 ## Usage
 
 ### Install
@@ -71,6 +77,12 @@ For integrated development server, simply run
 
 ```bash
 npm run serve
+```
+
+For integrated development server with auto-reload (by using `nodemon`), simply run
+
+```bash
+npm run dev
 ```
 
 ### Config
