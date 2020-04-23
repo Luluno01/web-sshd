@@ -38,6 +38,14 @@ interface RemoteTarget extends Target {
    * Path to private key
    */
   privateKey?: string
+  /**
+   * Private key passphrase
+   */
+  passphrase?: string
+  /**
+   * Whether we should ignore server push back
+   */
+  ignoreContinue?: boolean
 }
 
 interface LocalTarget extends Target {

@@ -85,17 +85,25 @@ export class WebSSHD implements Middleware {
     socket.emit(ServerEvent.SIZE, options)
     socket
       .on(ClientEvent.MESSAGE, data => {
-        try {
-          proc.write(data)
-        } catch(err) {
-          logger.error(`${socket.handshake.address} - "${socket.id}" failed to write to PTY`, err)
+        if (!pty.dead) {
+          try {
+            proc.write(data)
+          } catch(err) {
+            logger.error(`${socket.handshake.address} - "${socket.id}" failed to write to PTY`, err)
+          }
         }
       })
-      .on(ClientEvent.RESIZE, ({ cols, rows }: PTYOptions) => {
+      .on(ClientEvent.RESIZE, (options: PTYOptions) => {
         try {
-          proc.resize(cols, rows)
-        } catch(err) {
-          logger.error(`${socket.handshake.address} - "${socket.id}" failed to resize PTY`, err)
+          const { cols, rows } = options
+          if (typeof cols != 'number' || cols <= 0 || isNaN(cols) || typeof rows != 'number' || rows <= 0 || isNaN(rows)) throw new Error('Invalid resize options')
+          try {
+            proc.resize(cols, rows)
+          } catch(err) {
+            logger.error(`${socket.handshake.address} - "${socket.id}" failed to resize PTY`, err)
+          }
+        } catch (err) {
+          logger.warn(`${socket.handshake.address} - "${socket.id}" sent invalid resize options`)
         }
       })
       .on(ClientEvent.EXIT, () => {
