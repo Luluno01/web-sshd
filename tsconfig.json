@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2017",
+    "target": "es2019",
     "noImplicitAny": false,
     "outDir": "build",
     "sourceMap": true,
@@ -9,9 +9,5 @@
   },
   "include": [
     "src/**/*.ts"
-  ],
-  "exclude": [
-    "csgo-worker/**/*.ts",
-    "csgo-worker/**/*.d.ts"
   ]
 }
