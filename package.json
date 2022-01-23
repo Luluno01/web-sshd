@@ -30,7 +30,7 @@
   "dependencies": {
     "log4js": "^6.4.0",
     "node-pty": "^0.9.0",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.4.0",
     "ssh2": "^0.8.9",
     "yargs": "^15.3.1"
   }
